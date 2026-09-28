@@ -1,0 +1,10 @@
+IMPORTANT:
+The ZIP contains no hidden files or hidden directories by design.
+The GitHub Actions workflow is stored visibly at:
+github-workflows/monthly_update_and_pages.yml
+
+When uploading to GitHub, create:
+.github/workflows/
+and place monthly_update_and_pages.yml inside it.
+
+This is intentional because the requested ZIP must not contain hidden files.

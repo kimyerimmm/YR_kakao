@@ -1,0 +1,64 @@
+name: Monthly DART update and GitHub Pages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 1 * *"
+      timezone: "Asia/Seoul"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "dart-pages"
+  cancel-in-progress: false
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Collect OpenDART data
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        run: python src/dart_agent.py
+
+      - name: Build dashboard
+        run: python src/build_dashboard.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/processed dashboard/index.html
+          git diff --cached --quiet || git commit -m "chore: update DART financial data"
+          git push
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "dashboard"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

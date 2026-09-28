@@ -1,0 +1,2 @@
+The project intentionally uses only common Python packages.
+No hidden files are included in the ZIP.
