@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>카카오 재무분석 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { color-scheme: light; --ink:#202735; --muted:#687386; --line:#e6eaf0; --panel:#fff; --bg:#f5f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
+    header { padding:28px max(20px,calc((100% - 1120px)/2)); background:#202735; color:white; }
+    header h1 { margin:0 0 8px; font-size:25px; } header p { margin:0; color:#d5dbe5; }
+    main { max-width:1120px; margin:24px auto; padding:0 18px 40px; }
+    .meta { color:var(--muted); font-size:13px; margin-bottom:16px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .card,.panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 2px 8px #18223008; }
+    .label { color:var(--muted); font-size:13px; } .value { font-size:24px; font-weight:750; margin-top:8px; }
+    .unit { color:var(--muted); font-size:12px; margin-top:4px; }
+    .panels { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px; margin-top:16px; }
+    h2 { font-size:17px; margin:0 0 14px; } canvas { max-height:300px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; } th,td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; } th:first-child,td:first-child { text-align:left; }
+    .table-wrap { overflow-x:auto; } .notes { color:var(--muted); font-size:12px; line-height:1.65; }
+    .error { padding:14px; border-radius:10px; background:#fff4e5; color:#805000; }
+    @media(max-width:500px){ header h1{font-size:21px;} .value{font-size:21px;} }
+  </style>
+</head>
+<body>
+<header><h1>카카오 재무분석 대시보드</h1><p>OpenDART 사업보고서 기반 · 연도별 재무 현황</p></header>
+<main>
+  <div id="meta" class="meta">데이터를 불러오는 중입니다...</div>
+  <div id="error"></div>
+  <section id="cards" class="grid"></section>
+  <section class="panels">
+    <div class="panel"><h2>매출·영업이익·당기순이익</h2><canvas id="profitChart"></canvas></div>
+    <div class="panel"><h2>재무비율(%)</h2><canvas id="ratioChart"></canvas></div>
+    <div class="panel"><h2>현금흐름</h2><canvas id="cashChart"></canvas></div>
+  </section>
+  <section class="panel" style="margin-top:16px">
+    <h2>연도별 주요 재무 데이터</h2><div class="table-wrap"><table id="dataTable"></table></div>
+  </section>
+  <section class="panel" style="margin-top:16px"><h2>데이터 안내</h2><ul id="notes" class="notes"></ul></section>
+</main>
+<script>
+const won = n => n == null ? "자료 없음" : (n/1e8).toLocaleString("ko-KR",{maximumFractionDigits:1})+"억";
+const pct = n => n == null ? "자료 없음" : n.toLocaleString("ko-KR")+"%";
+async function load(){
+  try{
+    const res=await fetch("./data.json?ts="+Date.now());
+    if(!res.ok) throw new Error("docs/data.json을 찾을 수 없습니다. GitHub Actions 실행 여부를 확인해 주세요.");
+    const payload=await res.json(), rows=payload.data||[];
+    document.getElementById("meta").textContent=`기준: 사업보고서(연간) · 최종 업데이트: ${payload.updated_at||"확인 불가"} · 재무제표 기준: ${JSON.stringify(payload.financial_statement_basis_by_year||{})}`;
+    if(!rows.length) throw new Error("표시할 재무 데이터가 없습니다. API 키와 OpenDART 응답을 확인해 주세요.");
+    const last=rows[rows.length-1];
+    const cards=[
+      ["영업수익",won(last.revenue)],["영업이익",won(last.operating_profit)],
+      ["당기순이익",won(last.net_income)],["자산총계",won(last.total_assets)],
+      ["부채비율",pct(last.debt_ratio_pct)],["영업이익률",pct(last.operating_margin_pct)]
+    ];
+    document.getElementById("cards").innerHTML=cards.map(([a,b])=>`<div class="card"><div class="label">${a} · ${last.year}년</div><div class="value">${b}</div><div class="unit">원 단위 원자료를 억 원으로 환산</div></div>`).join("");
+    const years=rows.map(x=>x.year);
+    new Chart(document.getElementById("profitChart"),{type:"bar",data:{labels:years,datasets:[
+      {label:"영업수익",data:rows.map(x=>x.revenue==null?null:x.revenue/1e8)},
+      {label:"영업이익",data:rows.map(x=>x.operating_profit==null?null:x.operating_profit/1e8)},
+      {label:"당기순이익",data:rows.map(x=>x.net_income==null?null:x.net_income/1e8)}
+    ]},options:{responsive:true,plugins:{legend:{position:"bottom"}}}});
+    new Chart(document.getElementById("ratioChart"),{type:"line",data:{labels:years,datasets:[
+      {label:"영업이익률",data:rows.map(x=>x.operating_margin_pct)},
+      {label:"순이익률",data:rows.map(x=>x.net_margin_pct)},
+      {label:"부채비율",data:rows.map(x=>x.debt_ratio_pct)},
+      {label:"ROE",data:rows.map(x=>x.roe_pct)}
+    ]},options:{responsive:true,plugins:{legend:{position:"bottom"}}}});
+    new Chart(document.getElementById("cashChart"),{type:"bar",data:{labels:years,datasets:[
+      {label:"영업활동",data:rows.map(x=>x.operating_cash_flow==null?null:x.operating_cash_flow/1e8)},
+      {label:"투자활동",data:rows.map(x=>x.investing_cash_flow==null?null:x.investing_cash_flow/1e8)},
+      {label:"재무활동",data:rows.map(x=>x.financing_cash_flow==null?null:x.financing_cash_flow/1e8)}
+    ]},options:{responsive:true,plugins:{legend:{position:"bottom"}}}});
+    const labels=[["영업수익","revenue"],["영업이익","operating_profit"],["당기순이익","net_income"],["자산총계","total_assets"],["부채총계","total_liabilities"],["자본총계","total_equity"],["영업활동현금흐름","operating_cash_flow"],["투자활동현금흐름","investing_cash_flow"],["재무활동현금흐름","financing_cash_flow"],["영업이익률","operating_margin_pct"],["순이익률","net_margin_pct"],["부채비율","debt_ratio_pct"],["ROE","roe_pct"]];
+    document.getElementById("dataTable").innerHTML="<thead><tr><th>항목</th>"+years.map(y=>`<th>${y}년</th>`).join("")+"</tr></thead><tbody>"+labels.map(([name,key])=>`<tr><td>${name}</td>${rows.map(r=>`<td>${key.endsWith("_pct")?pct(r[key]):won(r[key])}</td>`).join("")}</tr>`).join("")+"</tbody>";
+    document.getElementById("notes").innerHTML=(payload.notes||[]).map(n=>`<li>${n}</li>`).join("");
+  }catch(e){document.getElementById("error").innerHTML=`<div class="error">${e.message}</div>`;document.getElementById("meta").textContent="데이터 로딩 실패";}
+}
+load();
+</script>
+</body></html>
