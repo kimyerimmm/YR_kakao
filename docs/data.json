@@ -1,0 +1,74 @@
+{
+  "company": "카카오",
+  "corp_code": "00258801",
+  "updated_at": "2026-11-02T09:55:55+00:00",
+  "unit": "KRW",
+  "report_code": "11011",
+  "financial_statement_basis_by_year": {
+    "2023": "CFS",
+    "2024": "CFS",
+    "2025": "CFS"
+  },
+  "data": [
+    {
+      "year": 2023,
+      "revenue": 7557001757272.0,
+      "operating_profit": 460857845673.0,
+      "net_income": -1816669011014.0,
+      "total_assets": 25179968939321.0,
+      "total_liabilities": 11321369715195.0,
+      "total_equity": 13858599224126.0,
+      "operating_cash_flow": null,
+      "investing_cash_flow": -1779932042360.0,
+      "financing_cash_flow": 1019586517417.0,
+      "cash_and_equivalents": 120412073981.0,
+      "fs_div": "CFS",
+      "operating_margin_pct": 6.1,
+      "net_margin_pct": -24.04,
+      "debt_ratio_pct": 81.69,
+      "roe_pct": null
+    },
+    {
+      "year": 2024,
+      "revenue": 7871692199887.0,
+      "operating_profit": 460212161525.0,
+      "net_income": -161870567171.0,
+      "total_assets": 25773028304462.0,
+      "total_liabilities": 11830134144725.0,
+      "total_equity": 13942894159737.0,
+      "operating_cash_flow": 1250459006332.0,
+      "investing_cash_flow": 10422744601.0,
+      "financing_cash_flow": -521317462083.0,
+      "cash_and_equivalents": 6145133028198.0,
+      "fs_div": "CFS",
+      "operating_margin_pct": 5.85,
+      "net_margin_pct": -2.06,
+      "debt_ratio_pct": 84.85,
+      "roe_pct": -1.16
+    },
+    {
+      "year": 2025,
+      "revenue": 8099147815086.0,
+      "operating_profit": 732036535379.0,
+      "net_income": 517959587282.0,
+      "total_assets": 27783524545811.0,
+      "total_liabilities": 12558602529761.0,
+      "total_equity": 15224922016050.0,
+      "operating_cash_flow": null,
+      "investing_cash_flow": -478201170293.0,
+      "financing_cash_flow": -708211857386.0,
+      "cash_and_equivalents": 6373784263399.0,
+      "fs_div": "CFS",
+      "operating_margin_pct": 9.04,
+      "net_margin_pct": 6.4,
+      "debt_ratio_pct": 82.49,
+      "roe_pct": 3.55
+    }
+  ],
+  "notes": [
+    "CFS(연결재무제표)를 우선 수집하며, 해당 연도 자료가 없으면 OFS(별도재무제표)를 사용합니다.",
+    "연도별 fs_div를 확인해 서로 다른 재무제표 기준이 섞였는지 확인하세요.",
+    "ROE는 당기순이익을 기초·기말 평균 자본으로 나눈 값이며, 첫 수집 연도에는 전년도 자본이 없어 계산하지 않습니다.",
+    "OpenDART 계정명 차이로 일부 항목이 누락될 수 있습니다. 원문 공시와 대조하세요."
+  ]
+}
